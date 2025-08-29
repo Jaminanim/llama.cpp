@@ -1314,6 +1314,7 @@ static common_chat_params common_chat_params_init_deepseek_r1(const common_chat_
 }
 static void common_chat_parse_deepseek_r1(common_chat_msg_parser & builder) {
     builder.try_parse_reasoning("<think>", "</think>");
+	builder.try_parse_reasoning("<seed:think>", "</seed:think>");
     if (!builder.syntax().parse_tool_calls) {
         builder.add_content(builder.consume_rest());
         return;
@@ -1865,6 +1866,7 @@ static common_chat_params common_chat_params_init_hermes_2_pro(const common_chat
 }
 static void common_chat_parse_hermes_2_pro(common_chat_msg_parser & builder) {
     builder.try_parse_reasoning("<think>", "</think>");
+	builder.try_parse_reasoning("<seed:think>", "</seed:think>");
     if (!builder.syntax().parse_tool_calls) {
         builder.add_content(builder.consume_rest());
         return;
@@ -2025,6 +2027,7 @@ static common_chat_params common_chat_params_init_granite(const common_chat_temp
 static void common_chat_parse_granite(common_chat_msg_parser & builder) {
     // Parse thinking tags
     builder.try_parse_reasoning("<think>", "</think>");
+	builder.try_parse_reasoning("<seed:think>", "</seed:think>");
 
     // Parse response tags using regex
     static const common_regex response_regex("<response>([\\s\\S]*?)</response>");
@@ -2257,6 +2260,10 @@ common_chat_params common_chat_templates_apply(
 }
 
 static void common_chat_parse_content_only(common_chat_msg_parser & builder) {
+    builder.try_parse_reasoning("<think>", "</think>");
+    builder.try_parse_reasoning("<seed:think>", "</seed:think>");
+
+    // Whatever remains after extraction is the visible assistant content:
     builder.add_content(builder.consume_rest());
 }
 

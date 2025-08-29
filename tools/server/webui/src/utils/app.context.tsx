@@ -19,6 +19,12 @@ import { BASE_URL, CONFIG_DEFAULT, isDev } from '../Config';
 import { matchPath, useLocation, useNavigate } from 'react-router';
 import toast from 'react-hot-toast';
 
+function stripReasoningBlocks(text: unknown): string {
+  if (typeof text !== 'string') return String(text ?? '');
+  // remove any <think>…</think> or <seed:think>…</seed:think>, multiline/case-insensitive
+  return text.replace(/<(?:seed:)?think>[\s\S]*?<\/(?:seed:)?think>/gi, '');
+}
+
 interface AppContextValue {
   // conversations and messages
   viewingChat: ViewingChat | null;
@@ -232,6 +238,18 @@ export const AppContextProvider = ({
         timings_per_token: !!config.showTokensPerSecond,
         ...(config.custom.length ? JSON.parse(config.custom) : {}),
       };
+
+      // --- never re-post thoughts on the next turn ---
+      if (Array.isArray(params.messages)) {
+        params.messages = (params.messages as APIMessage[]).map(
+          (m): APIMessage => {
+            if (m.role === 'assistant' && typeof m.content === 'string') {
+              return { ...m, content: stripReasoningBlocks(m.content) };
+            }
+            return m;
+          }
+        );
+      }
 
       // send request
       const fetchResponse = await fetch(`${BASE_URL}/v1/chat/completions`, {
